@@ -7,6 +7,7 @@ from multipledispatch import dispatch
 # from snowflake.snowpark.types import StructType, StructField, StringType, IntegerType
 # import pandas as pd
 
+
 @dispatch(str, str)
 def connect(conParams: str, SQL: str):
     with open(conParams) as temp, open(SQL) as query:
@@ -62,7 +63,7 @@ def generateSQL():
     
     actual_time = strftime("%Y-%m-%d %H-%M-%S", gmtime())
     qualified = json.load(open(credentials[0]))['database'] + '.' + json.load(open(credentials[0]))['schema'] + '.'
-    fType = fN[0].split('.')[1]
+    # fType = fN[0].split('.')[1]
     numCol = int(input('# of columns?\n'))
 
 
@@ -90,7 +91,7 @@ def generateSQL():
     ;
     """
 
-    ddl_op_dl, dml_op_dl, pipe_op_dl, stream_op_dl, rec_op_dl = open(f'sprint1/generatedSQL/ddl{actual_time}.txt', 'w'), open(f'sprint1/generatedSQL/dml{actual_time}.txt', 'w'), open(f'sprint1/generatedSQL/pipe{actual_time}.txt', 'w'), open(f'sprint1/generatedSQL/stream{actual_time}.txt', 'w'), open(f'sprint1/generatedSQL/recOP{actual_time}.txt', 'w')
+    ddl_op_dl, dml_op_dl, pipe_op_dl, stream_op_dl, rec_op_dl = open(f'generatedSQL/ddl{actual_time}.txt', 'w'), open(f'generatedSQL/dml{actual_time}.txt', 'w'), open(f'generatedSQL/pipe{actual_time}.txt', 'w'), open(f'generatedSQL/stream{actual_time}.txt', 'w'), open(f'generatedSQL/recOP{actual_time}.txt', 'w')
     ddl_output, dml_output, pipe_output, stream_output, rec_output = [], [], [], [], []
     tblCol = ''
     for col in range(numCol):

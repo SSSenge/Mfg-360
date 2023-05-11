@@ -1,0 +1,12 @@
+use role sysadmin;
+create or replace warehouse <wh> with warehouse_size = xsmall;
+create database <db>;
+create schema <schm>;
+<baseTable>
+<jsnTbl>
+create or replace file format CSV_one type = CSV skip_header = 0;
+create or replace file format JSON_one type = JSON strip_outer_array = True;
+use role accountadmin;
+CREATE OR REPLACE STAGE <stgnm> URL=<bucket> CREDENTIALS=(AWS_KEY_ID='<id>' AWS_SECRET_KEY='<key>') ENCRYPTION=(TYPE='AWS_SSE_KMS' KMS_KEY_ID = 'aws/key') directory = (enable = true auto_refresh = True);
+create or replace pipe <csvpp> auto_ingest = true as copy into <tblnm>_csv from (select <bCol> from @<stgnm> (file_format => 'CSV_one', pattern => '\/[a-zA-Z0-9_\-]+.csv'));
+create or replace pipe <jsnpp> auto_ingest = true as copy into <tblnm>_json from (select $1 from @<stgnm> (file_format => 'JSON_one', pattern=>'\/[a-zA-Z0-9_\-]+.json'));
