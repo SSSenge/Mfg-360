@@ -1,0 +1,50 @@
+use role sysadmin;
+create or replace warehouse <wh> with
+warehouse_size = xsmall;
+create database <db>;
+create schema <schm>;
+
+<baseTable>
+
+create or replace file format CSV_one 
+type = CSV
+skip_header = 1
+field_delimiter = ',';
+
+create or replace file format JSON_one
+type = JSON
+strip_outer_array = True;
+
+use role accountadmin;
+
+create or replace storage integration <sint>
+type = external_stage
+storage_provider='S3'
+storage_aws_role_arn = <aws_arn>
+storage_allowed_locations = (<bucket>)
+enabled = true;
+
+create or replace stage <stgnm> 
+URL = <bucket>
+storage_integration = <sint>
+directory = (enable = true auto_refresh = True);
+
+create or replace pipe <csvpp>
+auto_ingest = true
+as
+copy into <tblnm>
+from <stgnm>
+pattern = '.csv'
+file_format = CSV_one;
+
+create or replace pipe <jsnpp>
+auto_ingest = true
+as
+copy into <tblnm>
+from <stgnm>
+pattern = '.json'
+file_format = JSON_one;
+
+desc stage <stgnm>;
+
+select $4 as v from table (result_scan(last_query_id())) where $2 = 'AWS_EXTERNAL_ID' or $2 = 'SNOWFLAKE_IAM_USER';
