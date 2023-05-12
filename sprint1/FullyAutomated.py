@@ -4,7 +4,7 @@ import json
 # from time import gmtime, strftime
 from datetime import datetime
 # from os import basename
-# from multipledispatch import dispatch
+from multipledispatch import dispatch
 # from snowflake.snowpark.types import StructType, StructField, StringType, IntegerType
 # import pandas as pd
 
@@ -70,8 +70,21 @@ def returnSQL(creds: dict):
 
     return (session, bF)
     
+@dispatch(dict)
+def main(creds: dict):
+    try:
+        session, bF = returnSQL(creds)
 
+        
+        for sql in bF:
+            session.sql(sql).collect()
+        session.close()
+        return 'Success.'
+    except:
+        session.close()
+        return 'Failure.'
 
+@dispatch()
 def main():
     try:
         start = input('file/path/here.json\n')
@@ -84,9 +97,4 @@ def main():
         session.close()
     except:
         session.close()
-    
-    
 
-
-
-main()
