@@ -10,5 +10,5 @@ create file format if not exists CSV_one type = CSV skip_header = 0;
 create file format if not exists JSON_one type = JSON strip_outer_array = True;
 use role accountadmin;
 CREATE stage if not exists <stgnm> URL=<bucket> CREDENTIALS=(AWS_KEY_ID='<id>' AWS_SECRET_KEY='<key>') ENCRYPTION=(TYPE='AWS_SSE_KMS' KMS_KEY_ID = 'aws/key') directory = (enable = true auto_refresh = True);
-create pipe if not exists <csvpp> auto_ingest = true as copy into <tblnm>_csv from (select <bCol> from @<stgnm> (file_format => 'CSV_one', pattern => '\/[a-zA-Z0-9_\-]+.csv'));
-create pipe if not exists <jsnpp> auto_ingest = true as copy into <tblnm>_json from (select $1 from @<stgnm> (file_format => 'JSON_one', pattern=>'\/[a-zA-Z0-9_\-]+.json'));
+create pipe if not exists <csvpp> auto_ingest = true as copy into <tblnm>_csv from (select <bCol> from @<stgnm> (file_format => 'CSV_one', pattern => '[a-zA-Z0-9_\-]+.csv'));
+create pipe if not exists <jsnpp> auto_ingest = true as copy into <tblnm>_json from (select $1 from @<stgnm> (file_format => 'JSON_one', pattern=>'[a-zA-Z0-9_\-]+.json'));
