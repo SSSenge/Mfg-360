@@ -11,17 +11,19 @@ from multipledispatch import dispatch
 
 def initialize(creds: dict):
     # check for missing parameters then map missing parameters to default values, default role is accountadmin, default warehouse is compute_wh, default database/schema is parameterName_bucketFolder
-    empty = {(k, k + '_' + creds['AWS']['bucket'].split('/')[-1] + str(datetime.now().date()) + '__' + str(datetime.now().time())) for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
-    
-    # make some SQL to create missing database/schema if necessary
-    sql = (f"create {empty['database']}; ") if 'database' in empty else '' + (f"create {empty['schema']};") if 'schema' in empty else ''
-    
+    empty = {k: k + '_' + creds['AWS']['bucket'].split('/')[-1] + str(datetime.now().date()).replace('-', '_') + '__' + str(datetime.now().time()).replace(':', '_').replace('.', '_') for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
+    # oE is more default values -used in conParams
+    oE = {'warehouse': 'default_wh', 'role':'accountadmin'}
     # add the default warehouse and role if necessary
-    conParams = dict(map(lambda x: x if x[0] not in empty else (x[0], 'accountadmin') if x[0] == 'role' else (x[0], 'compute_wh') if x[0] == 'warehouse' else x, creds['Snowflake'].items()))
+    conParams = dict(map(lambda x: x if x not in [('warehouse', ''), ('role', '')] else (x[0], oE[x[0]]), creds['Snowflake'].items()))
     
     # start a new session in Snowflake with the required credentials
-    new_session = Session.builder.configs(conParams).create()   
-    new_session.sql(sql)
+    new_session = Session.builder.configs(conParams).create()
+    for k, v in empty.items():
+        if v != '':
+            # create new database or schema if necessary, then assign default values to conParams
+            new_session.sql(f'create {k} if not exists {v}')
+            conParams[k] = v
 
     return (new_session, conParams)
 
