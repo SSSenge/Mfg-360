@@ -11,7 +11,7 @@ from multipledispatch import dispatch
 
 def initialize(creds: dict):
     # check for missing parameters then map missing parameters to default values, default role is accountadmin, default warehouse is compute_wh, default database/schema is parameterName_bucketFolder
-    empty = {(k, k + '_' + creds['AWS']['bucket'].split('/')[1] + str(datetime.now().date()) + '__' + str(datetime.now().time())) for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
+    empty = {(k, k + '_' + creds['AWS']['bucket'].split('/')[-1] + str(datetime.now().date()) + '__' + str(datetime.now().time())) for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
     
     # make some SQL to create missing database/schema if necessary
     sql = (f"create {empty['database']}; ") if 'database' in empty else '' + (f"create {empty['schema']};") if 'schema' in empty else ''
@@ -38,6 +38,7 @@ def makeBT(max: str):
     bCol += f'${max}'
     return BTsql, bCol
 
+
 def replaceAny(line: str, searchMap: dict):
     # helper function for bigFormat(), is used to format initSQL.txt by each line.
     for k, v in searchMap.items():
@@ -53,9 +54,10 @@ def bigFormat(creds: dict, conParams: dict, BTsql: str, bCol: str):
     buck = creds['AWS']['bucket'].split('/')
     # dictionary for use in format loop, {searchTerm: mappedValue}
     searchMap = {'<wh>': conParams['warehouse'],'<db>': conParams['database'], '<schm>': conParams['schema'],
-                 '<stgnm>': f"stg_{buck[1]}", '<bucket>': '"s3://' + '/'.join(buck) + '/"', '<id>': creds['AWS']['id'], '<key>': creds['AWS']['key'],
-                 '<csvpp>': f"csvpp_{buck[1]}", '<jsnpp>': f"jsnpp_{buck[1]}", '<tblnm>': f"tbl_{buck[1]}", '<bCol>' : f'{bCol}',
-                 '<baseTable>': f"create or replace table tbl_{buck[1]}_csv({BTsql});", '<jsnTbl>': f'create or replace table tbl_{buck[1]}_json ("1" variant);'}
+                 '<stgnm>': f"stg_{buck[-1]}", '<bucket>': '"s3://' + '/'.join(buck) + '/"', '<id>': creds['AWS']['id'], '<key>': creds['AWS']['key'],
+                 '<csvpp>': f"csvpp_{buck[-1]}", '<jsnpp>': f"jsnpp_{buck[-1]}", '<tblnm>': f"tbl_{buck[-1]}", '<bCol>' : f'{bCol}',
+                 '<baseTable>': f"create table if not exists tbl_{buck[-1]}_csv({BTsql});", '<jsnTbl>': f'create table if not exists tbl_{buck[-1]}_json ("1" variant);',
+                 '<csvstrm>': f'csvstrm_{buck[-1]}', '<jsnstrm>': f'jsnstrm_{buck[-1]}'}
     
     bF = []
     for line in init:
@@ -63,19 +65,21 @@ def bigFormat(creds: dict, conParams: dict, BTsql: str, bCol: str):
     # returns the fully formatted SQL text
     return bF
 
+
 def returnSQL(creds: dict):
     BTsql, bCol = makeBT(creds['max'])
     session, conParams = initialize(creds)
     bF = bigFormat(creds, conParams, BTsql, bCol)
 
     return (session, bF)
+
     
 @dispatch(dict)
 def main(creds: dict):
     try:
         session, bF = returnSQL(creds)
 
-        
+
         for sql in bF:
             session.sql(sql).collect()
         session.close()
@@ -84,6 +88,7 @@ def main(creds: dict):
         session.close()
         return 'Failure.'
 
+
 @dispatch()
 def main():
     try:
@@ -91,7 +96,7 @@ def main():
         creds = json.load(open(start))
 
         session, bF = returnSQL(creds)
-
+        
         for sql in bF:
             print(session.sql(sql).collect())
         session.close()
