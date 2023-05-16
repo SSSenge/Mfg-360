@@ -11,7 +11,7 @@ from multipledispatch import dispatch
 
 def initialize(creds: dict):
     # check for missing parameters then map missing parameters to default values, default role is accountadmin, default warehouse is compute_wh, default database/schema is parameterName_bucketFolder
-    empty = {k: k + '_' + creds['AWS']['bucket'].split('/')[-1] + str(datetime.now().date()).replace('-', '_') + '__' + str(datetime.now().time()).replace(':', '_').replace('.', '_') for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
+    empty = {k: k + '_' + creds['AWS']['bucket'].split('/')[-1].replace('-', '_').replace('.', '_') + str(datetime.now().date()).replace('-', '_') + '__' + str(datetime.now().time()).replace(':', '_').replace('.', '_') for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
     # oE is more default values -used in conParams
     oE = {'warehouse': 'default_wh', 'role':'accountadmin'}
     # add the default warehouse and role if necessary
@@ -45,7 +45,7 @@ def replaceAny(line: str, searchMap: dict):
     # helper function for bigFormat(), is used to format initSQL.txt by each line.
     for k, v in searchMap.items():
         if k in line:
-            line = line.replace(k, v)
+            line = line.replace(k, v.replace('-', '_').replace('.', '_') if k != '<bucket>' else v)
     return line
 
 
