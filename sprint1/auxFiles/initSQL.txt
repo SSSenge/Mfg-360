@@ -1,16 +1,18 @@
 use role sysadmin;
 create warehouse if not exists <wh> with warehouse_size = xsmall;
+use warehouse <wh>;
 create database if not exists <db>;
+use database <db>;
 create schema if not exists <schm>;
+use schema <schm>;
 <baseTable>
 <jsnTbl>
 create stream if not exists <csvstrm> on table <tblnm>_csv append_only = true;
 create stream if not exists <jsnstrm> on table <tblnm>_json append_only = true;
-create file format if not exists CSV_one type = CSV skip_header = 0;
+create file format if not exists CSV_one type = CSV skip_header = 0 error_on_column_count_mismatch = false;
 create file format if not exists JSON_one type = JSON strip_outer_array = True;
-use role accountadmin;
 CREATE stage if not exists <stgnm> URL=<bucket> CREDENTIALS=(AWS_KEY_ID='<id>' AWS_SECRET_KEY='<key>') ENCRYPTION=(TYPE='AWS_SSE_KMS' KMS_KEY_ID = 'aws/key') directory = (enable = true auto_refresh = True);
-create pipe if not exists <csvpp> auto_ingest = true as copy into <tblnm>_csv from (select <bCol> from @<stgnm> (file_format => 'CSV_one', pattern => '.*[a-zA-Z0-9_\-.]+csv'));
-create pipe if not exists <jsnpp> auto_ingest = true as copy into <tblnm>_json from (select $1 from @<stgnm> (file_format => 'JSON_one', pattern=>'.*[a-zA-Z0-9_\-.]+json'));
+create pipe if not exists <csvpp> auto_ingest = true as copy into <tblnm>_csv from (select <bCol> from @<stgnm> (file_format => 'CSV_one', pattern => '.*[a-zA-Z0-9_\\-.]+csv'));
+create pipe if not exists <jsnpp> auto_ingest = true as copy into <tblnm>_json from (select $1 from @<stgnm> (file_format => 'JSON_one', pattern=>'.*[a-zA-Z0-9_\\-.]+json'));
 alter pipe <csvpp> refresh;
 alter pipe <jsnpp> refresh;

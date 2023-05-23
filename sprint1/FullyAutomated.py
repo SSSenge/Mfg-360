@@ -10,10 +10,10 @@ from multipledispatch import dispatch
 
 
 def initialize(creds: dict):
-    # check for missing parameters then map missing parameters to default values, default role is accountadmin, default warehouse is compute_wh, default database/schema is parameterName_bucketFolder
+    # check for missing parameters then map missing parameters to default values, default role is sysadmin, default warehouse is compute_wh, default database/schema is parameterName_bucketFolder
     empty = {k: k + '_' + creds['AWS']['bucket'].split('/')[-1].replace('-', '_').replace('.', '_') + str(datetime.now().date()).replace('-', '_') + '__' + str(datetime.now().time()).replace(':', '_').replace('.', '_') for k, v in creds['Snowflake'].items() if k in ['database', 'schema'] and v == ''}
     # oE is more default values -used in conParams
-    oE = {'warehouse': 'default_wh', 'role':'accountadmin'}
+    oE = {'warehouse': 'default_wh', 'role':'sysadmin'}
     # add the default warehouse and role if necessary
     conParams = dict(map(lambda x: x if x not in [('warehouse', ''), ('role', '')] else (x[0], oE[x[0]]), creds['Snowflake'].items()))
     
